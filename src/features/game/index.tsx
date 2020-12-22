@@ -14,44 +14,36 @@ import {
 } from "./slice";
 import { FetchStatus } from '../../interfaces/common';
 import { useHistory } from "react-router-dom";
+import config from "../../config";
+
+const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
 
 function randomNumber(min: number, max: number): number {
     let rand = min + Math.random() * (max + 1 - min);
     return Math.floor(rand);
 }
 
-function calculateNewFilter(TOTAL_GAMES: number, currentPage: number, increaseDifficulty = false) {
+function calculateNewFilter(totalGames: number, currentPage: number, increaseDifficulty = false) {
     let gap: number;
     let pageSize: number;
-    if (TOTAL_GAMES) {
-        const MAX_PAGE_SIZE = 40;
-        const ANSWERS_COUNT = 6;
-        const MAX_GAMES_TO_ANSWER = 12;
-        const MINIMUM_GAP = 3;
-        // API can't show more than 10k games, bug reported, wait till fixed
-        if (TOTAL_GAMES > 1e4) TOTAL_GAMES = 1e4;
-        if (TOTAL_GAMES / MAX_PAGE_SIZE >= MAX_GAMES_TO_ANSWER * MINIMUM_GAP) {
-            pageSize = MAX_PAGE_SIZE;
-            gap = Math.floor(TOTAL_GAMES / MAX_PAGE_SIZE / MAX_GAMES_TO_ANSWER);
-        } else {
-            if (TOTAL_GAMES / MAX_GAMES_TO_ANSWER < ANSWERS_COUNT) {
-                alert('search again');
-                return;
-            } else {
-                pageSize = TOTAL_GAMES / MAX_GAMES_TO_ANSWER;
-                gap = 1;
-            }
-        }
+    const minimumGap = 3;
+    // API can't show more than 10k games, bug reported, wait till fixed
+    if (totalGames > 1e4) totalGames = 1e4;
+    if (totalGames / maxPageSize >= maxGamesToAnswer * minimumGap) {
+        pageSize = maxPageSize;
+        gap = Math.floor(totalGames / maxPageSize / maxGamesToAnswer);
     } else {
+        // TODO: think about this case after adding new difficulty
+        // if (totalGames / maxGamesToAnswer < maxAnswers)
+        pageSize = totalGames / maxGamesToAnswer;
         gap = 1;
-        pageSize = 6;
     }
     const page = increaseDifficulty ? currentPage + randomNumber(2, gap) : currentPage + 1;
     return { pageSize, page }
 }
 
 
-function getRandomItemsFromArray<T>(array: T[], except: T, howMuch = 5): T[] {
+function getRandomItemsFromArray<T>(array: T[], except: T, howMuch = maxAnswers - 1): T[] {
     if (!array.length) return [];
     if (array.length === howMuch) return array;
 

@@ -1,12 +1,18 @@
 interface Config {
     apiKey: string,
     baseURL: string,
-    earliestReleaseYearInBase: number
+    earliestReleaseYearInBase: number,
+    maxPageSize: number,
+    maxAnswers: number,
+    maxGamesToAnswer: number
 }
 
 const config: Config = {
-    apiKey: '449d19a3e64645cba21e2cacff174812',
+    apiKey: '',
     baseURL: 'https://api.rawg.io/api/',
-    earliestReleaseYearInBase: 1971
+    earliestReleaseYearInBase: 1971,
+    maxPageSize: 40,
+    maxAnswers: 6,
+    maxGamesToAnswer: 12
 }
 export default config;
