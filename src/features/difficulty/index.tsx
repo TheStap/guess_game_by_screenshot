@@ -4,6 +4,8 @@ import { useHistory } from 'react-router-dom';
 import { Difficulty, fetchVideoGames, setDifficulty } from '../game/slice';
 import { useAppDispatch } from "../../store";
 import { setFilterStateToDefault, } from '../filter/slice';
+import { Box, Tooltip } from "@material-ui/core";
+import './index.scss';
 
 function DifficultySelect() {
     const history = useHistory();
@@ -32,8 +34,8 @@ function DifficultySelect() {
 
 
     return (
-        <>
-            <h2>Select difficulty:</h2>
+        <Box className="difficulty">
+            <h2 className="difficulty__heading">Select difficulty:</h2>
             {/*<Button
                 variant="outlined"
                 size="large"
@@ -49,15 +51,17 @@ function DifficultySelect() {
             >
                 Medium
             </Button>*/}
-            <Button
-                variant="contained"
-                size="large"
-                color="secondary"
-                onClick={goToHardcore}
-            >
-                Hardcore
-            </Button>
-        </>
+            <Tooltip title="Guess from all existing games">
+                <Button
+                    variant="contained"
+                    size="large"
+                    color="secondary"
+                    onClick={goToHardcore}
+                >
+                    Hardcore
+                </Button>
+            </Tooltip>
+        </Box>
     )
 }
 
