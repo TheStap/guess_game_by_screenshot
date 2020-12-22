@@ -6,7 +6,7 @@ import Button from "@material-ui/core/Button";
 import Box from '@material-ui/core/Box';
 import { getRandomIndexFromArray, getRandomItemFromArray } from '../../common/utils';
 import './index.scss';
-import { CircularProgress, withStyles } from "@material-ui/core";
+import { CircularProgress, withStyles, Container } from "@material-ui/core";
 import { setFilterState } from "../filter/slice";
 import {
     fetchVideoGames,
@@ -15,6 +15,8 @@ import {
 import { FetchStatus } from '../../interfaces/common';
 import { useHistory } from "react-router-dom";
 import config from "../../config";
+import Answer from "./answer";
+import DifficultyView from "./difficulty";
 
 const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
 
@@ -56,10 +58,6 @@ function getRandomItemsFromArray<T>(array: T[], except: T, howMuch = maxAnswers 
     return Array.from(result);
 }
 
-const AnswerButton = withStyles({
-    root: { marginRight: '10px' }
-})(Button)
-
 function Game() {
     const dispatch = useDispatch();
     const history = useHistory();
@@ -79,8 +77,15 @@ function Game() {
         if (!videoGameToAnswer) return;
 
         setImageLoaded(false);
-        return getRandomItemFromArray(videoGameToAnswer.short_screenshots).image;
-    }, [videoGameToAnswer])
+        const screens = [...videoGameToAnswer.short_screenshots];
+        // first screen is always poster
+        screens.splice(0, 1);
+        return getRandomItemFromArray(screens).image;
+    }, [videoGameToAnswer]);
+    
+    const screenshotClassName = useMemo(() => {
+        return imageLoaded ? 'game__screenshot' : 'game__screenshot game__screenshot--hidden';
+    }, [imageLoaded])
 
     const answers = useMemo(() => {
         if (!videoGameToAnswer) return [];
@@ -108,7 +113,7 @@ function Game() {
             dispatch(setFilterState(newFilter));
             dispatch(fetchVideoGames());
         }
-        if (game.answersCount.correct + game.answersCount.wrong === 2) {
+        if (game.answersCount.correct + game.answersCount.wrong === maxGamesToAnswer) {
             alert(`Game finished correct: ${game.answersCount.correct}
              wrong: ${game.answersCount.wrong}`);
             dispatch(setDifficulty(null));
@@ -119,43 +124,32 @@ function Game() {
         dispatch, filter.state,
         game.answersCount.correct, game.answersCount.wrong,
         game.videoGames.count, videoGameToAnswer, history]);
-
-
-    if (!videoGameToAnswer) return null;
+    
+    const isLoading = useMemo(() => {
+        return game.videoGames.status === FetchStatus.Pending || !imageLoaded;
+    }, [game.videoGames.status, imageLoaded])
 
     return (
-        <Box className="game">
-            <h1 className="game__difficulty">
-                You are now guessing
-                {filter?.state?.genre?.name}
-                videogames from {filter.state.yearFrom} to {filter.state.yearTo}
-            </h1>
-            {game.videoGames.status === FetchStatus.Pending || !imageLoaded ?
-                <Box className="game__loader-wrap">
-                    <CircularProgress/>
+        <Container className="game" maxWidth="md">
+            <Box className="game__wrap">
+                <DifficultyView/>
+                {isLoading ?
+                    <Box className="game__loader-wrap">
+                        <CircularProgress/>
+                    </Box>
+                    :
+                    <Box className="game__answers">
+                        {answers.map(answer => <Answer model={answer} onClick={vote}/>)}
+                    </Box>
+                }
+                <Box>
+                    <img onLoad={() => setImageLoaded(true)}
+                         alt="screenshot"
+                         className={screenshotClassName}
+                         src={screenshotSource}/>
                 </Box>
-                : <Box className="game__answers">
-                    {answers.map(answer => {
-                        return (
-                            <AnswerButton
-                                key={answer.id}
-                                onClick={() => vote(answer)}
-                                variant="outlined"
-                                size="large"
-                                color={answer.id === videoGameToAnswer.id ? "secondary" : "primary"}
-                            >
-                                {answer.name}
-                            </AnswerButton>
-                        )
-                    })}
-                </Box>}
-            <img style={imageLoaded ? {} : { display: 'none' }}
-                 onLoad={() => {
-                     console.log('loaded')
-                     setImageLoaded(true)
-                 }} className="game__screenshot" alt="screenshot"
-                 src={screenshotSource}/>
-        </Box>
+            </Box>
+        </Container>
     )
 }
 
