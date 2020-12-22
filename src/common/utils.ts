@@ -1,5 +1,10 @@
+export function getRandomNumber(min: number, max: number): number {
+    let rand = min + Math.random() * (max + 1 - min);
+    return Math.floor(rand);
+}
+
 export function getRandomIndexFromArray<T>(array: T[]): number {
-    return Math.floor(Math.random() * array.length);
+    return getRandomNumber(0, array.length)
 }
 
 export function getRandomItemFromArray<T>(array: T[]): T {

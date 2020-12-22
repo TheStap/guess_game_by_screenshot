@@ -62,7 +62,7 @@ export const filterSlice = createSlice({
         setFilterState: (state, action: PayloadAction<FilterState>) => {
             return { ...state, state: action.payload }
         },
-        setFilterStateToDefault: state => {
+        clearFilterState: state => {
             return { ...state, state: initialState.state}
         }
     },
@@ -83,7 +83,7 @@ export const filterSlice = createSlice({
 
 });
 
-export const { setFilterState, setFilterStateToDefault } = filterSlice.actions;
+export const { setFilterState, clearFilterState } = filterSlice.actions;
 
 export const selectFilter = (state: RootState) => state.filter;
 

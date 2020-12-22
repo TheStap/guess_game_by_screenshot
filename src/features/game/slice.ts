@@ -85,12 +85,7 @@ export const gameSlice = createSlice({
         setDifficulty: (state, { payload }: PayloadAction<Difficulty | null>) => {
             state.difficulty = payload;
         },
-        clearVideoGameData: state => {
-            state.videoGames.items = [];
-            state.videoGames.count = null;
-            state.videoGameToAnswerId = null;
-
-        }
+        clearState: () => initialState
     },
     extraReducers: builder => {
         builder.addCase(fetchVideoGames.fulfilled, (state, { payload: { results, count } }) => {
@@ -113,7 +108,7 @@ export const gameSlice = createSlice({
 });
 
 export const {
-    incrementCorrectAnswersCount, incrementWrongAnswersCount, setDifficulty, clearVideoGameData
+    incrementCorrectAnswersCount, incrementWrongAnswersCount, setDifficulty, clearState
 } = gameSlice.actions;
 
 // The function below is called a selector and allows us to select a value from

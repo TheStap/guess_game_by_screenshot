@@ -2,15 +2,18 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { GameModel } from '../../interfaces/Games';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store";
-import Button from "@material-ui/core/Button";
 import Box from '@material-ui/core/Box';
-import { getRandomIndexFromArray, getRandomItemFromArray } from '../../common/utils';
+import {
+    getRandomIndexFromArray,
+    getRandomItemFromArray,
+    getRandomNumber
+} from '../../common/utils';
 import './index.scss';
-import { CircularProgress, withStyles, Container } from "@material-ui/core";
+import { CircularProgress, Container } from "@material-ui/core";
 import { setFilterState } from "../filter/slice";
 import {
-    fetchVideoGames,
-    incrementCorrectAnswersCount, incrementWrongAnswersCount, setDifficulty, clearVideoGameData
+    clearState,
+    fetchVideoGames, incrementCorrectAnswersCount, incrementWrongAnswersCount
 } from "./slice";
 import { FetchStatus } from '../../interfaces/common';
 import { useHistory } from "react-router-dom";
@@ -19,11 +22,6 @@ import Answer from "./answer";
 import DifficultyView from "./difficulty";
 
 const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
-
-function randomNumber(min: number, max: number): number {
-    let rand = min + Math.random() * (max + 1 - min);
-    return Math.floor(rand);
-}
 
 function calculateNewFilter(totalGames: number, currentPage: number, increaseDifficulty = false) {
     let gap: number;
@@ -40,19 +38,19 @@ function calculateNewFilter(totalGames: number, currentPage: number, increaseDif
         pageSize = totalGames / maxGamesToAnswer;
         gap = 1;
     }
-    const page = increaseDifficulty ? currentPage + randomNumber(2, gap) : currentPage + 1;
+    const page = increaseDifficulty ? currentPage + getRandomNumber(2, gap) : currentPage + 1;
     return { pageSize, page }
 }
 
-
-function getRandomItemsFromArray<T>(array: T[], except: T, howMuch = maxAnswers - 1): T[] {
+export function getRandomGames(array: GameModel[], except: GameModel): GameModel[] {
+    const size = maxAnswers - 1;
     if (!array.length) return [];
-    if (array.length === howMuch) return array;
+    if (array.length === size) return array;
 
-    const result = new Set<T>();
-    while (result.size < howMuch) {
+    const result = new Set<GameModel>();
+    while (result.size < size) {
         const item = getRandomItemFromArray(array);
-        if (item === except) continue;
+        if (item.id === except.id) continue;
         result.add(item);
     }
     return Array.from(result);
@@ -68,6 +66,10 @@ function Game() {
 
     const filter = useSelector((state: RootState) => state.filter);
 
+    const isLoading = useMemo(() => {
+        return game.videoGames.status === FetchStatus.Pending || !imageLoaded;
+    }, [game.videoGames.status, imageLoaded])
+
     const videoGameToAnswer = useMemo(() => {
         const gameId = game.videoGameToAnswerId;
         return game.videoGames.items.find(({ id }) => id === gameId);
@@ -82,52 +84,52 @@ function Game() {
         screens.splice(0, 1);
         return getRandomItemFromArray(screens).image;
     }, [videoGameToAnswer]);
-    
+
     const screenshotClassName = useMemo(() => {
         return imageLoaded ? 'game__screenshot' : 'game__screenshot game__screenshot--hidden';
     }, [imageLoaded])
 
     const answers = useMemo(() => {
         if (!videoGameToAnswer) return [];
-        const gameAnswers = getRandomItemsFromArray(game.videoGames.items, videoGameToAnswer);
+        const gameAnswers = getRandomGames(game.videoGames.items, videoGameToAnswer);
         gameAnswers.splice(getRandomIndexFromArray(gameAnswers), 0, videoGameToAnswer);
         return gameAnswers;
     }, [game.videoGames.items, videoGameToAnswer]);
 
+    const { correct, wrong } = game.answersCount;
+
+    const needToRestart = useMemo(() => correct + wrong === maxGamesToAnswer, [correct, wrong])
+
+    const restartGame = useCallback(() => {
+        alert(`Game finished correct: ${correct} wrong: ${wrong}`);
+        dispatch(clearState());
+        history.push('/');
+    }, [correct, dispatch, history, wrong])
+
     const vote = useCallback((answer: GameModel) => {
         if (!videoGameToAnswer) return;
 
+        const calculateFilter = calculateNewFilter
+            .bind(null, game.videoGames.count!, filter.state.page)
+
+        let newFilter;
         if (answer.id === videoGameToAnswer.id) {
             dispatch(incrementCorrectAnswersCount());
-            const newFilter = {
-                ...filter.state,
-                ...calculateNewFilter(game.videoGames.count!, filter.state.page, true)
-            }
-            dispatch(setFilterState(newFilter));
-            dispatch(fetchVideoGames());
+            newFilter = { ...filter.state, ...calculateFilter(true) };
         } else {
             dispatch(incrementWrongAnswersCount());
-            const newFilter = {
-                ...filter.state, ...calculateNewFilter(game.videoGames.count!, filter.state.page)
-            }
+            newFilter = { ...filter.state, ...calculateFilter() };
+        }
+
+        if (needToRestart) {
+            restartGame();
+        } else {
             dispatch(setFilterState(newFilter));
             dispatch(fetchVideoGames());
         }
-        if (game.answersCount.correct + game.answersCount.wrong === maxGamesToAnswer) {
-            alert(`Game finished correct: ${game.answersCount.correct}
-             wrong: ${game.answersCount.wrong}`);
-            dispatch(setDifficulty(null));
-            dispatch(clearVideoGameData())
-            history.push('/');
-        }
-    }, [
-        dispatch, filter.state,
-        game.answersCount.correct, game.answersCount.wrong,
-        game.videoGames.count, videoGameToAnswer, history]);
-    
-    const isLoading = useMemo(() => {
-        return game.videoGames.status === FetchStatus.Pending || !imageLoaded;
-    }, [game.videoGames.status, imageLoaded])
+    }, [dispatch,
+        filter.state,
+        game.videoGames.count, needToRestart, restartGame, videoGameToAnswer]);
 
     return (
         <Container className="game" maxWidth="md">
@@ -139,12 +141,12 @@ function Game() {
                     </Box>
                     :
                     <Box className="game__answers">
-                        {answers.map(answer => <Answer model={answer} onClick={vote}/>)}
+                        {answers.map(a => <Answer key={a.id} model={a} onClick={vote}/>)}
                     </Box>
                 }
                 <Box>
                     <img onLoad={() => setImageLoaded(true)}
-                         alt="screenshot"
+                         alt=""
                          className={screenshotClassName}
                          src={screenshotSource}/>
                 </Box>
