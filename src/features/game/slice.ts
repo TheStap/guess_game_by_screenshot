@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {  RootState } from '../../store';
+import { RootState } from '../../store';
 import config from "../../config";
 import { GameModel, GamesRequestParams } from "../../interfaces/Games";
 import { FilterState, THIS_YEAR } from "../filter/slice";
@@ -22,17 +22,17 @@ interface GameState {
 
 interface VideoGamesState {
     items: GameModel[];
-    count: number | null;
+    count: number ;
     status: FetchStatus;
-    error: string | null;
+    error: string;
 }
 
 const initialState: GameState = {
     videoGames: {
         items: [],
-        count: null,
+        count: 0,
         status: FetchStatus.Idle,
-        error: null
+        error: ''
     },
     difficulty: null,
     answersCount: {

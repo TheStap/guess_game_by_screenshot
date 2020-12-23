@@ -24,25 +24,6 @@ import { useSnackbar } from 'notistack';
 
 const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
 
-function calculateNewFilter(totalGames: number, currentPage: number, increaseDifficulty = false) {
-    let gap: number;
-    let pageSize: number;
-    const minimumGap = 3;
-    // API can't show more than 10k games, bug reported, wait till fixed
-    if (totalGames > 1e4) totalGames = 1e4;
-    if (totalGames / maxPageSize >= maxGamesToAnswer * minimumGap) {
-        pageSize = maxPageSize;
-        gap = Math.floor(totalGames / maxPageSize / maxGamesToAnswer);
-    } else {
-        // TODO: think about this case after adding new difficulty
-        // if (totalGames / maxGamesToAnswer < maxAnswers)
-        pageSize = totalGames / maxGamesToAnswer;
-        gap = 1;
-    }
-    const page = increaseDifficulty ? currentPage + getRandomNumber(2, gap) : currentPage + 1;
-    return { pageSize, page }
-}
-
 export function getRandomGames(array: GameModel[], except: GameModel): GameModel[] {
     const size = maxAnswers - 1;
     if (!array.length) return [];
@@ -100,7 +81,9 @@ function Game() {
 
     const { correct, wrong } = game.answersCount;
 
-    const needToRestart = useMemo(() => correct + wrong === maxGamesToAnswer, [correct, wrong])
+    const answersCount = useMemo(() => correct + wrong, [correct, wrong])
+
+    const needToRestart = useMemo(() => answersCount === maxGamesToAnswer, [correct, wrong])
 
     const restartGame = useCallback(() => {
         alert(`Game finished correct: ${correct} wrong: ${wrong}`);
@@ -108,21 +91,38 @@ function Game() {
         history.push('/');
     }, [correct, dispatch, history, wrong])
 
+    const getFormulaNumbers = useMemo(() => {
+        let { count } = game.videoGames;
+
+        // API can't show more than 10k games, bug reported, wait till fixed
+        if (count > 1e4) count = 1e4;
+
+        const gap = Math.floor(count / maxPageSize / maxGamesToAnswer);
+        const gapStep = Math.floor(gap / maxGamesToAnswer) * (correct + 1);
+        return { gap, gapStep }
+    }, [correct, game.videoGames])
+
+    const calculateNewFilter = useCallback((increaseDifficulty = false) => {
+        const { page: currentPage } = filter.state;
+        const { gap, gapStep } = getFormulaNumbers;
+        
+        const page = increaseDifficulty ?
+            currentPage + getRandomNumber(gapStep, gap) : currentPage + 1;
+        return { pageSize: maxPageSize, page }
+    }, [filter.state, getFormulaNumbers])
+
     const vote = useCallback((answer: GameModel) => {
         if (!videoGameToAnswer) return;
-
-        const calculateFilter = calculateNewFilter
-            .bind(null, game.videoGames.count!, filter.state.page)
 
         let newFilter;
         if (answer.id === videoGameToAnswer.id) {
             enqueueSnackbar('You are right!', { variant: "success" })
             dispatch(incrementCorrectAnswersCount());
-            newFilter = { ...filter.state, ...calculateFilter(true) };
+            newFilter = { ...filter.state, ...calculateNewFilter(true) };
         } else {
             enqueueSnackbar('Nope', { variant: 'error' })
             dispatch(incrementWrongAnswersCount());
-            newFilter = { ...filter.state, ...calculateFilter() };
+            newFilter = { ...filter.state, ...calculateNewFilter() };
         }
 
         if (needToRestart) {
@@ -131,19 +131,16 @@ function Game() {
             dispatch(setFilterState(newFilter));
             dispatch(fetchVideoGames());
         }
-    }, [dispatch,
-        enqueueSnackbar,
-        filter.state,
-        game.videoGames.count,
-        needToRestart,
-        restartGame,
-        videoGameToAnswer
-    ]);
+    }, [
+        calculateNewFilter,
+        dispatch,
+        enqueueSnackbar, filter.state, needToRestart, restartGame, videoGameToAnswer]);
 
     return (
         <Container className="game" maxWidth="md">
             <Box className="game__wrap">
                 <DifficultyView/>
+                <h2 className="game__games-count">{answersCount}/{maxGamesToAnswer}</h2>
                 {isLoading ?
                     <Box className="game__loader-wrap">
                         <CircularProgress/>
