@@ -20,6 +20,7 @@ import { useHistory } from "react-router-dom";
 import config from "../../config";
 import Answer from "./answer";
 import DifficultyView from "./difficulty";
+import { useSnackbar } from 'notistack';
 
 const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
 
@@ -59,6 +60,7 @@ export function getRandomGames(array: GameModel[], except: GameModel): GameModel
 function Game() {
     const dispatch = useDispatch();
     const history = useHistory();
+    const { enqueueSnackbar } = useSnackbar();
 
     const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -114,9 +116,11 @@ function Game() {
 
         let newFilter;
         if (answer.id === videoGameToAnswer.id) {
+            enqueueSnackbar('You are right!', { variant: "success" })
             dispatch(incrementCorrectAnswersCount());
             newFilter = { ...filter.state, ...calculateFilter(true) };
         } else {
+            enqueueSnackbar('Nope', { variant: 'error' })
             dispatch(incrementWrongAnswersCount());
             newFilter = { ...filter.state, ...calculateFilter() };
         }
@@ -128,8 +132,13 @@ function Game() {
             dispatch(fetchVideoGames());
         }
     }, [dispatch,
+        enqueueSnackbar,
         filter.state,
-        game.videoGames.count, needToRestart, restartGame, videoGameToAnswer]);
+        game.videoGames.count,
+        needToRestart,
+        restartGame,
+        videoGameToAnswer
+    ]);
 
     return (
         <Container className="game" maxWidth="md">

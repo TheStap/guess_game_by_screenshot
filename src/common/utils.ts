@@ -4,7 +4,7 @@ export function getRandomNumber(min: number, max: number): number {
 }
 
 export function getRandomIndexFromArray<T>(array: T[]): number {
-    return getRandomNumber(0, array.length)
+    return getRandomNumber(0, array.length - 1)
 }
 
 export function getRandomItemFromArray<T>(array: T[]): T {
