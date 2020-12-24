@@ -60,10 +60,12 @@ export const filterSlice = createSlice({
     initialState,
     reducers: {
         setFilterState: (state, action: PayloadAction<FilterState>) => {
-            return { ...state, state: action.payload }
+            return { ...state, ...action.payload }
         },
         clearFilterState: state => {
-            return { ...state, state: initialState }
+            const filterInitialState = { ...initialState };
+            delete filterInitialState.additionalData;
+            return { ...state, ...filterInitialState };
         },
         setFilterStateToIncreaseGameDifficulty: (
             state,

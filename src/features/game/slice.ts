@@ -67,7 +67,7 @@ const name = 'game';
 
 export const fetchVideoGames = createAsyncThunk(
     `${name}/fetchGames`,
-    async (increaseDifficulty, thunkApi) => {
+    async (_, thunkApi) => {
         const state = thunkApi.getState() as RootState;
         const result = await api.getGames(buildGamesRequestParams(
             { ...state.filter }));
