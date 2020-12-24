@@ -5,6 +5,9 @@ import config from '../../config';
 import api from "../../common/api";
 import { Genre } from '../../interfaces/Games';
 import { FetchStatus } from '../../interfaces/common';
+import { getRandomNumber } from "../../common/utils";
+
+const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
 
 export const THIS_YEAR = new Date().getFullYear();
 
@@ -26,19 +29,14 @@ export interface AdditionalDataState {
     genres: GenresState
 }
 
-export interface FilterCommonState {
-    state: FilterState,
-    additionalData: AdditionalDataState
-}
+type CommonFilterState = FilterState & { additionalData: AdditionalDataState }
 
-const initialState: FilterCommonState = {
-    state: {
-        genre: null,
-        yearFrom: config.earliestReleaseYearInBase,
-        yearTo: THIS_YEAR,
-        page: 1,
-        pageSize: 6
-    },
+const initialState: CommonFilterState = {
+    genre: null,
+    yearFrom: config.earliestReleaseYearInBase,
+    yearTo: THIS_YEAR,
+    page: 1,
+    pageSize: maxAnswers,
     additionalData: {
         genres: {
             items: [],
@@ -48,22 +46,37 @@ const initialState: FilterCommonState = {
     }
 };
 
+const name = 'filter';
+
 export const fetchGenres = createAsyncThunk(
-    'game/fetchGenres',
+    `${name}/fetchGenres`,
     async () => {
         const result = await api.getGenres();
         return result.data.results;
     })
 
 export const filterSlice = createSlice({
-    name: 'filter',
+    name,
     initialState,
     reducers: {
         setFilterState: (state, action: PayloadAction<FilterState>) => {
             return { ...state, state: action.payload }
         },
         clearFilterState: state => {
-            return { ...state, state: initialState.state}
+            return { ...state, state: initialState }
+        },
+        setFilterStateToIncreaseGameDifficulty: (
+            state,
+            action: PayloadAction<{ videogamesCount: number, correctAnswersCount: number }>) => {
+            let { videogamesCount, correctAnswersCount } = action.payload;
+
+            // API can't show more than 10k games, bug reported, wait till fixed
+            if (videogamesCount > 1e4) videogamesCount = 1e4;
+
+            const gap = Math.floor(videogamesCount / maxPageSize / maxGamesToAnswer);
+            const gapStep = Math.floor(gap / maxGamesToAnswer) * (correctAnswersCount + 1);
+
+            state.page = state.page + getRandomNumber(gapStep, gap);
         }
     },
     extraReducers: builder => {
@@ -83,7 +96,10 @@ export const filterSlice = createSlice({
 
 });
 
-export const { setFilterState, clearFilterState } = filterSlice.actions;
+export const {
+    setFilterState, clearFilterState,
+    setFilterStateToIncreaseGameDifficulty
+} = filterSlice.actions;
 
 export const selectFilter = (state: RootState) => state.filter;
 

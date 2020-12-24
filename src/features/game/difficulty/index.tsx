@@ -9,8 +9,8 @@ function DifficultyView() {
 
     return (
         <h1>
-            You are guessing {filter?.state?.genre?.name} videogames
-            from {filter.state.yearFrom} to {filter.state.yearTo}
+            You are guessing {filter.genre?.name} videogames
+            from {filter.yearFrom} to {filter.yearTo}
         </h1>
     )
 }

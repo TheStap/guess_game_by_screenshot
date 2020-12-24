@@ -3,14 +3,9 @@ import { GameModel } from '../../interfaces/Games';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store";
 import Box from '@material-ui/core/Box';
-import {
-    getRandomIndexFromArray,
-    getRandomItemFromArray,
-    getRandomNumber
-} from '../../common/utils';
 import './index.scss';
 import { CircularProgress, Container } from "@material-ui/core";
-import { setFilterState } from "../filter/slice";
+import { setFilterState, setFilterStateToIncreaseGameDifficulty } from "../filter/slice";
 import {
     clearState,
     fetchVideoGames, incrementCorrectAnswersCount, incrementWrongAnswersCount
@@ -20,23 +15,9 @@ import { useHistory } from "react-router-dom";
 import config from "../../config";
 import Answer from "./answer";
 import DifficultyView from "./difficulty";
-import { useSnackbar } from 'notistack';
+import { useSnackbar, VariantType } from 'notistack';
 
-const { maxPageSize, maxGamesToAnswer, maxAnswers } = config;
-
-export function getRandomGames(array: GameModel[], except: GameModel): GameModel[] {
-    const size = maxAnswers - 1;
-    if (!array.length) return [];
-    if (array.length === size) return array;
-
-    const result = new Set<GameModel>();
-    while (result.size < size) {
-        const item = getRandomItemFromArray(array);
-        if (item.id === except.id) continue;
-        result.add(item);
-    }
-    return Array.from(result);
-}
+const { maxPageSize, maxGamesToAnswer } = config;
 
 function Game() {
     const dispatch = useDispatch();
@@ -53,88 +34,58 @@ function Game() {
         return game.videoGames.status === FetchStatus.Pending || !imageLoaded;
     }, [game.videoGames.status, imageLoaded])
 
-    const videoGameToAnswer = useMemo(() => {
-        const gameId = game.videoGameToAnswerId;
-        return game.videoGames.items.find(({ id }) => id === gameId);
-    }, [game.videoGameToAnswerId, game.videoGames.items]);
-
-    const screenshotSource = useMemo(() => {
-        if (!videoGameToAnswer) return;
-
-        setImageLoaded(false);
-        const screens = [...videoGameToAnswer.short_screenshots];
-        // first screen is always poster
-        screens.splice(0, 1);
-        return getRandomItemFromArray(screens).image;
-    }, [videoGameToAnswer]);
-
     const screenshotClassName = useMemo(() => {
         return imageLoaded ? 'game__screenshot' : 'game__screenshot game__screenshot--hidden';
-    }, [imageLoaded])
-
-    const answers = useMemo(() => {
-        if (!videoGameToAnswer) return [];
-        const gameAnswers = getRandomGames(game.videoGames.items, videoGameToAnswer);
-        gameAnswers.splice(getRandomIndexFromArray(gameAnswers), 0, videoGameToAnswer);
-        return gameAnswers;
-    }, [game.videoGames.items, videoGameToAnswer]);
+    }, [imageLoaded]);
 
     const { correct, wrong } = game.answersCount;
 
     const answersCount = useMemo(() => correct + wrong, [correct, wrong])
 
-    const needToRestart = useMemo(() => answersCount === maxGamesToAnswer, [correct, wrong])
+    const needToRestart = useMemo(() => answersCount === maxGamesToAnswer, [answersCount])
+
+    const showMessage = useCallback((message: string, variant: VariantType) => {
+        if (!needToRestart) enqueueSnackbar(message, { variant })
+    }, [enqueueSnackbar, needToRestart])
 
     const restartGame = useCallback(() => {
         alert(`Game finished correct: ${correct} wrong: ${wrong}`);
         dispatch(clearState());
         history.push('/');
-    }, [correct, dispatch, history, wrong])
-
-    const getFormulaNumbers = useMemo(() => {
-        let { count } = game.videoGames;
-
-        // API can't show more than 10k games, bug reported, wait till fixed
-        if (count > 1e4) count = 1e4;
-
-        const gap = Math.floor(count / maxPageSize / maxGamesToAnswer);
-        const gapStep = Math.floor(gap / maxGamesToAnswer) * (correct + 1);
-        return { gap, gapStep }
-    }, [correct, game.videoGames])
-
-    const calculateNewFilter = useCallback((increaseDifficulty = false) => {
-        const { page: currentPage } = filter.state;
-        const { gap, gapStep } = getFormulaNumbers;
-        
-        const page = increaseDifficulty ?
-            currentPage + getRandomNumber(gapStep, gap) : currentPage + 1;
-        return { pageSize: maxPageSize, page }
-    }, [filter.state, getFormulaNumbers])
+    }, [correct, dispatch, history, wrong]);
 
     const vote = useCallback((answer: GameModel) => {
-        if (!videoGameToAnswer) return;
+        if (!answersCount) dispatch(setFilterState({ ...filter, pageSize: maxPageSize }));
 
-        let newFilter;
-        if (answer.id === videoGameToAnswer.id) {
-            enqueueSnackbar('You are right!', { variant: "success" })
+        if (answer.id === game.videoGameToAnswerId) {
+            showMessage('You are right!', 'success');
             dispatch(incrementCorrectAnswersCount());
-            newFilter = { ...filter.state, ...calculateNewFilter(true) };
+            dispatch(setFilterStateToIncreaseGameDifficulty(
+                { videogamesCount: game.videoGames.count, correctAnswersCount: correct }
+            ));
         } else {
-            enqueueSnackbar('Nope', { variant: 'error' })
+            showMessage('Nope', 'error');
             dispatch(incrementWrongAnswersCount());
-            newFilter = { ...filter.state, ...calculateNewFilter() };
+            dispatch(setFilterState({ ...filter, page: filter.page + 1 }));
         }
 
         if (needToRestart) {
             restartGame();
         } else {
-            dispatch(setFilterState(newFilter));
+            setImageLoaded(false);
             dispatch(fetchVideoGames());
         }
     }, [
-        calculateNewFilter,
+        answersCount,
+        correct,
         dispatch,
-        enqueueSnackbar, filter.state, needToRestart, restartGame, videoGameToAnswer]);
+        filter,
+        game.videoGameToAnswerId,
+        game.videoGames.count,
+        needToRestart,
+        restartGame,
+        showMessage
+    ]);
 
     return (
         <Container className="game" maxWidth="md">
@@ -147,14 +98,14 @@ function Game() {
                     </Box>
                     :
                     <Box className="game__answers">
-                        {answers.map(a => <Answer key={a.id} model={a} onClick={vote}/>)}
+                        {game.answers.map(a => <Answer key={a.id} model={a} onClick={vote}/>)}
                     </Box>
                 }
                 <Box>
                     <img onLoad={() => setImageLoaded(true)}
                          alt=""
                          className={screenshotClassName}
-                         src={screenshotSource}/>
+                         src={game.videoGameScreen}/>
                 </Box>
             </Box>
         </Container>
