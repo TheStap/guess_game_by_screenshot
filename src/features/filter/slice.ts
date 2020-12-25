@@ -78,7 +78,7 @@ export const filterSlice = createSlice({
             const gap = Math.floor(videogamesCount / maxPageSize / maxGamesToAnswer);
             const gapStep = Math.floor(gap / maxGamesToAnswer) * (correctAnswersCount + 1);
 
-            state.page = state.page + getRandomNumber(gapStep, gap);
+            state.page = gap * correctAnswersCount + getRandomNumber(gapStep, gap);
         }
     },
     extraReducers: builder => {
