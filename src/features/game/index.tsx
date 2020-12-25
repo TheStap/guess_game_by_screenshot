@@ -4,18 +4,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store";
 import Box from '@material-ui/core/Box';
 import './index.scss';
-import { CircularProgress, Container } from "@material-ui/core";
 import { setFilterState, setFilterStateToIncreaseGameDifficulty } from "../filter/slice";
 import {
-    clearState,
-    fetchVideoGames, incrementCorrectAnswersCount, incrementWrongAnswersCount
+    fetchVideoGames, incrementCorrectAnswersCount, incrementWrongAnswersCount, isVideoGamesLoading
 } from "./slice";
-import { FetchStatus } from '../../interfaces/common';
 import { useHistory } from "react-router-dom";
 import config from "../../config";
 import Answer from "./answer";
-import DifficultyView from "./difficulty";
 import { useSnackbar, VariantType } from 'notistack';
+import LoaderContainer from "../ui/loaderContainer";
+import StretchContainer from "../ui/stretchContainer";
 
 const { maxPageSize, maxGamesToAnswer } = config;
 
@@ -30,9 +28,7 @@ function Game() {
 
     const filter = useSelector((state: RootState) => state.filter);
 
-    const isLoading = useMemo(() => {
-        return game.videoGames.status === FetchStatus.Pending || !imageLoaded;
-    }, [game.videoGames.status, imageLoaded])
+    const loading = useSelector(isVideoGamesLoading);
 
     const screenshotClassName = useMemo(() => {
         return imageLoaded ? 'game__screenshot' : 'game__screenshot game__screenshot--hidden';
@@ -82,19 +78,15 @@ function Game() {
     ]);
 
     return (
-        <Container className="game" maxWidth="md">
-            <Box className="game__wrap">
+        <StretchContainer>
+            <Box className="game">
                 {/*<DifficultyView/>*/}
                 <h2 className="game__games-count">{answersCount}/{maxGamesToAnswer}</h2>
-                {isLoading ?
-                    <Box className="game__loader-wrap">
-                        <CircularProgress/>
-                    </Box>
-                    :
+                <LoaderContainer isLoading={loading || !imageLoaded}>
                     <Box className="game__answers">
                         {game.answers.map(a => <Answer key={a.id} model={a} onClick={vote}/>)}
                     </Box>
-                }
+                </LoaderContainer>
                 <Box>
                     <img onLoad={() => setImageLoaded(true)}
                          alt=""
@@ -102,7 +94,7 @@ function Game() {
                          src={game.videoGameScreen}/>
                 </Box>
             </Box>
-        </Container>
+        </StretchContainer>
     )
 }
 

@@ -1,16 +1,23 @@
 import React from 'react';
 import DifficultySelect from "../difficulty";
-import { Container } from '@material-ui/core';
+import { useSelector } from "react-redux";
+import StretchContainer from "../ui/stretchContainer";
+import { isVideoGamesLoading } from '../game/slice';
+import LoaderContainer from '../ui/loaderContainer';
 
 function StartScreen() {
+    const loading = useSelector(isVideoGamesLoading);
+
     return (
-        <Container fixed maxWidth="md">
-            <h1>
-                How good do you know videogames? <br/>
-                Guess the videogame from the screenshot!
-            </h1>
-            <DifficultySelect/>
-        </Container>
+        <StretchContainer>
+            <LoaderContainer isLoading={loading}>
+                <h1>
+                    How good do you know videogames? <br/>
+                    Guess the videogame from the screenshot!
+                </h1>
+                <DifficultySelect/>
+            </LoaderContainer>
+        </StretchContainer>
     )
 }
 
