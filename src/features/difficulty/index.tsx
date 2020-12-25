@@ -35,7 +35,7 @@ function DifficultySelect() {
 
     return (
         <Box className="difficulty">
-            <h2 className="difficulty__heading">Select difficulty:</h2>
+            {/*<h2 className="difficulty__heading">Select difficulty:</h2>*/}
             {/*<Button
                 variant="outlined"
                 size="large"
@@ -51,16 +51,16 @@ function DifficultySelect() {
             >
                 Medium
             </Button>*/}
-            <Tooltip title="Guess from all existing games">
+            {/*<Tooltip title="Guess from all existing games">*/}
                 <Button
                     variant="contained"
                     size="large"
                     color="secondary"
                     onClick={goToHardcore}
                 >
-                    Hardcore
+                    Start
                 </Button>
-            </Tooltip>
+            {/*</Tooltip>*/}
         </Box>
     )
 }
