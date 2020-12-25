@@ -4,6 +4,7 @@ import Filter from "./features/filter";
 import Game from "./features/game";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Start from './features/start';
+import Finish from "./features/finish";
 
 
 function App() {
@@ -19,6 +20,9 @@ function App() {
                 </Route>*/}
                 <Route path="/game">
                     <Game/>
+                </Route>
+                <Route path="/finish">
+                    <Finish/>
                 </Route>
             </Switch>
         </Router>

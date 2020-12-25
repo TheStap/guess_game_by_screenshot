@@ -48,12 +48,6 @@ function Game() {
         if (!needToRestart) enqueueSnackbar(message, { variant })
     }, [enqueueSnackbar, needToRestart])
 
-    const restartGame = useCallback(() => {
-        alert(`Game finished correct: ${correct} wrong: ${wrong}`);
-        dispatch(clearState());
-        history.push('/');
-    }, [correct, dispatch, history, wrong]);
-
     const vote = useCallback((answer: GameModel) => {
         if (!answersCount) dispatch(setFilterState({ ...filter, pageSize: maxPageSize }));
 
@@ -70,7 +64,7 @@ function Game() {
         }
 
         if (needToRestart) {
-            restartGame();
+            history.push('/finish');
         } else {
             setImageLoaded(false);
             dispatch(fetchVideoGames());
@@ -83,7 +77,7 @@ function Game() {
         game.videoGameToAnswerId,
         game.videoGames.count,
         needToRestart,
-        restartGame,
+        history,
         showMessage
     ]);
 
