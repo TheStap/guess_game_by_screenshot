@@ -84,7 +84,7 @@ function Game() {
     return (
         <Container className="game" maxWidth="md">
             <Box className="game__wrap">
-                <DifficultyView/>
+                {/*<DifficultyView/>*/}
                 <h2 className="game__games-count">{answersCount}/{maxGamesToAnswer}</h2>
                 {isLoading ?
                     <Box className="game__loader-wrap">
