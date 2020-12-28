@@ -42,7 +42,7 @@ export default function Game() {
 
     const answersCount = useMemo(() => correct + wrong, [correct, wrong])
 
-    const needToFinish = useMemo(() => answersCount - 1 === maxGamesToAnswer, [answersCount])
+    const needToFinish = useMemo(() => answersCount === maxGamesToAnswer - 1, [answersCount])
 
     const showMessage = useCallback((message: string, variant: VariantType) => {
         if (!needToFinish) enqueueSnackbar(message, { variant })
@@ -85,7 +85,7 @@ export default function Game() {
         <StretchContainer>
             <Box className="game">
                 {/*<DifficultyView/>*/}
-                <h2 className="game__games-count">{answersCount}/{maxGamesToAnswer}</h2>
+                <h2 className="game__games-count">{answersCount + 1}/{maxGamesToAnswer}</h2>
                 <LoaderContainer isLoading={loading || !imageLoaded}>
                     <Box className="game__answers">
                         {game.answers.map(a => <Answer key={a.id} model={a} onClick={vote}/>)}
