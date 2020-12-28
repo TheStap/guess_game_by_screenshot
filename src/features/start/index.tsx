@@ -15,6 +15,10 @@ function Start() {
                     How good do you know videogames? <br/>
                     Guess the videogame from the screenshot!
                 </h1>
+                <h2>
+                    You have to guess from all PC games.
+                    The more often you guess the harder it gets
+                </h2>
                 <DifficultySelect/>
             </LoaderContainer>
         </StretchContainer>
