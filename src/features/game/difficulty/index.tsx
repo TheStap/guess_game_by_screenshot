@@ -1,11 +1,11 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
+import { getFilterState } from "../../filter/slice";
 
 
 
 function DifficultyView() {
-    const filter = useSelector((state: RootState) => state.filter);
+    const filter = useSelector(getFilterState);
 
     return (
         <h1>

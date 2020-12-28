@@ -1,12 +1,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { GameModel } from '../../interfaces/Games';
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../store";
 import Box from '@material-ui/core/Box';
 import './index.scss';
-import { setFilterState, setFilterStateToIncreaseGameDifficulty } from "../filter/slice";
+import { getFilterState,
+    setFilterState,
+    setFilterStateToMakeGameMoreDifficult
+} from "../filter/slice";
 import {
-    fetchVideoGames, incrementCorrectAnswersCount, incrementWrongAnswersCount, isVideoGamesLoading
+    fetchVideoGames, getGameState,
+    incrementCorrectAnswersCount, incrementWrongAnswersCount, isVideoGamesLoading
 } from "./slice";
 import { useHistory } from "react-router-dom";
 import config from "../../config";
@@ -25,9 +28,9 @@ export default function Game() {
 
     const [imageLoaded, setImageLoaded] = useState(false);
 
-    const game = useSelector((state: RootState) => state.game);
+    const game = useSelector(getGameState);
 
-    const filter = useSelector((state: RootState) => state.filter);
+    const filter = useSelector(getFilterState);
 
     const loading = useSelector(isVideoGamesLoading);
 
@@ -39,11 +42,11 @@ export default function Game() {
 
     const answersCount = useMemo(() => correct + wrong, [correct, wrong])
 
-    const needToRestart = useMemo(() => answersCount === maxGamesToAnswer, [answersCount])
+    const needToFinish = useMemo(() => answersCount === maxGamesToAnswer, [answersCount])
 
     const showMessage = useCallback((message: string, variant: VariantType) => {
-        if (!needToRestart) enqueueSnackbar(message, { variant })
-    }, [enqueueSnackbar, needToRestart])
+        if (!needToFinish) enqueueSnackbar(message, { variant })
+    }, [enqueueSnackbar, needToFinish])
 
     const vote = useCallback((answer: GameModel) => {
         if (!answersCount) dispatch(setFilterState({ ...filter, pageSize: maxPageSize }));
@@ -51,7 +54,7 @@ export default function Game() {
         if (answer.id === game.videoGameToAnswerId) {
             showMessage('You are right!', 'success');
             dispatch(incrementCorrectAnswersCount());
-            dispatch(setFilterStateToIncreaseGameDifficulty(
+            dispatch(setFilterStateToMakeGameMoreDifficult(
                 { videogamesCount: game.videoGames.count, correctAnswersCount: correct }
             ));
         } else {
@@ -60,7 +63,7 @@ export default function Game() {
             dispatch(setFilterState({ ...filter, page: filter.page + 1 }));
         }
 
-        if (needToRestart) {
+        if (needToFinish) {
             history.push(routes.finish.path);
         } else {
             setImageLoaded(false);
@@ -73,7 +76,7 @@ export default function Game() {
         filter,
         game.videoGameToAnswerId,
         game.videoGames.count,
-        needToRestart,
+        needToFinish,
         history,
         showMessage
     ]);

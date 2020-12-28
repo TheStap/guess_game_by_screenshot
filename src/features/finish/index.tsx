@@ -5,10 +5,7 @@ import config from '../../config';
 import { Button } from "@material-ui/core";
 import { useHistory } from "react-router-dom";
 import { clearFilterState } from "../filter/slice";
-import {
-    clearState,
-    Difficulty, fetchVideoGames, isVideoGamesLoading, setDifficulty
-} from "../game/slice";
+import { clearGameState, fetchVideoGames, isVideoGamesLoading } from "../game/slice";
 import StretchContainer from '../ui/stretchContainer';
 import LoaderContainer from "../ui/loaderContainer";
 import { routes } from '../../routes';
@@ -39,9 +36,8 @@ export default function Finish() {
 
 
     const playAgain = useCallback(() => {
-        dispatch(clearState());
+        dispatch(clearGameState());
         dispatch(clearFilterState());
-        dispatch(setDifficulty(Difficulty.Hardcore));
         dispatch(fetchVideoGames()).then(() => {
             history.push(routes.game.path);
         });

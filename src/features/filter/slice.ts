@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
-import { SimpleGenre } from "../../interfaces/Genres";
+import { SimpleGenre, GenresResponse } from "../../interfaces/Genres";
 import config from '../../config';
 import api from "../../common/api";
 import { Genre } from '../../interfaces/Games';
@@ -51,7 +51,7 @@ const name = 'filter';
 export const fetchGenres = createAsyncThunk(
     `${name}/fetchGenres`,
     async () => {
-        const result = await api.getGenres();
+        const result = await api.get<GenresResponse>('genres');
         return result.data.results;
     })
 
@@ -67,7 +67,7 @@ export const filterSlice = createSlice({
             delete filterInitialState.additionalData;
             return { ...state, ...filterInitialState };
         },
-        setFilterStateToIncreaseGameDifficulty: (
+        setFilterStateToMakeGameMoreDifficult: (
             state,
             action: PayloadAction<{ videogamesCount: number, correctAnswersCount: number }>) => {
             let { videogamesCount, correctAnswersCount } = action.payload;
@@ -100,9 +100,9 @@ export const filterSlice = createSlice({
 
 export const {
     setFilterState, clearFilterState,
-    setFilterStateToIncreaseGameDifficulty
+    setFilterStateToMakeGameMoreDifficult
 } = filterSlice.actions;
 
-export const selectFilter = (state: RootState) => state.filter;
+export const getFilterState = (state: RootState) => state.filter;
 
 export default filterSlice.reducer;

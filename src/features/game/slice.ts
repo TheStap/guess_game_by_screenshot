@@ -1,11 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 import config from "../../config";
-import { GameModel, GamesRequestParams } from "../../interfaces/Games";
+import { GameModel, GamesRequestParams, GamesResponse } from "../../interfaces/Games";
 import { FilterState, THIS_YEAR } from "../filter/slice";
 import api from '../../common/api';
-import { getRandomIndexFromArray,
-    getRandomItemFromArray, getRandomNumber } from "../../common/utils";
+import {
+    getRandomIndexFromArray,
+    getRandomItemFromArray, getRandomNumber
+} from "../../common/utils";
 import { FetchStatus } from '../../interfaces/common';
 
 const { maxAnswers } = config;
@@ -69,8 +71,10 @@ export const fetchVideoGames = createAsyncThunk(
     `${name}/fetchGames`,
     async (_, thunkApi) => {
         const state = thunkApi.getState() as RootState;
-        const result = await api.getGames(buildGamesRequestParams(
-            { ...state.filter }));
+        const result = await api.get<GamesResponse>('games', {
+            params: buildGamesRequestParams(
+                { ...state.filter })
+        });
         return result.data
     })
 
@@ -108,7 +112,7 @@ export const gameSlice = createSlice({
         setDifficulty: (state, { payload }: PayloadAction<Difficulty | null>) => {
             state.difficulty = payload;
         },
-        clearState: () => initialState
+        clearGameState: () => initialState
     },
     extraReducers: builder => {
         builder
@@ -140,11 +144,13 @@ export const gameSlice = createSlice({
 });
 
 export const {
-    incrementCorrectAnswersCount, incrementWrongAnswersCount, setDifficulty, clearState
+    incrementCorrectAnswersCount, incrementWrongAnswersCount, setDifficulty, clearGameState
 } = gameSlice.actions;
 
 export const isVideoGamesLoading = (state: RootState) => {
     return state.game.videoGames.status === FetchStatus.Pending;
 };
+
+export const getGameState = (state: RootState) => state.game;
 
 export default gameSlice.reducer;

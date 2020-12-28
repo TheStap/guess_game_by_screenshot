@@ -1,11 +1,11 @@
 import { RouteProps } from "react-router";
 import { useSelector } from "react-redux";
-import { RootState } from "./store";
 import { Redirect, Route } from "react-router-dom";
 import React from "react";
 import Start from "./features/start";
 import Game from "./features/game";
 import Finish from "./features/finish";
+import { RootState } from "./store";
 
 interface RouteConfig {
     path: string,
@@ -37,14 +37,13 @@ export const routes: RoutesDictionary = {
 export const routesAsArray = Object.values(routes);
 
 export function ProtectedRoute({ children, ...rest }: RouteProps) {
-    const game = useSelector((state: RootState) => state.game);
-
+    const difficulty = useSelector((state: RootState) => state.game.difficulty);
 
     return (
         <Route
             {...rest}
             render={({ location }) =>
-                game.difficulty ? (
+                difficulty ? (
                     children
                 ) : (
                     <Redirect
