@@ -9,9 +9,9 @@ function App() {
     return (
         <Router>
             <Switch>
-                {routesAsArray.map(({ component: C, path, isPrivate }) => {
+                {routesAsArray.map(({ component: C, isPrivate, ...rest }, i) => {
                     const ResultRoute = isPrivate ? ProtectedRoute : Route;
-                    return <ResultRoute path={path}><C/></ResultRoute>;
+                    return <ResultRoute key={i} {...rest}><C/></ResultRoute>;
                 })}
             </Switch>
         </Router>

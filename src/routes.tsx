@@ -10,7 +10,8 @@ import { RootState } from "./store";
 interface RouteConfig {
     path: string,
     component: () => JSX.Element,
-    isPrivate?: boolean
+    isPrivate?: boolean,
+    exact?: boolean
 }
 
 interface RoutesDictionary {
@@ -20,7 +21,8 @@ interface RoutesDictionary {
 export const routes: RoutesDictionary = {
     start: {
         path: '/',
-        component: Start
+        component: Start,
+        exact: true
     },
     game: {
         path: '/game',

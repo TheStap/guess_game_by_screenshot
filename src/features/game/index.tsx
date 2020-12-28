@@ -42,7 +42,7 @@ export default function Game() {
 
     const answersCount = useMemo(() => correct + wrong, [correct, wrong])
 
-    const needToFinish = useMemo(() => answersCount === maxGamesToAnswer, [answersCount])
+    const needToFinish = useMemo(() => answersCount - 1 === maxGamesToAnswer, [answersCount])
 
     const showMessage = useCallback((message: string, variant: VariantType) => {
         if (!needToFinish) enqueueSnackbar(message, { variant })
