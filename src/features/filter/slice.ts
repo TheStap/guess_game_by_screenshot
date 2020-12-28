@@ -93,6 +93,7 @@ export const filterSlice = createSlice({
 
         builder.addCase(fetchGenres.rejected, (state) => {
             state.additionalData.genres.status = FetchStatus.Finished;
+            state.additionalData.genres.error = 'Unable to load genres';
         })
     }
 

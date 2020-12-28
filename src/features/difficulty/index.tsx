@@ -1,16 +1,20 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import Button from "@material-ui/core/Button";
 import { useHistory } from 'react-router-dom';
 import { Difficulty, fetchVideoGames, setDifficulty } from '../game/slice';
-import { useAppDispatch } from "../../store";
+import { RootState, useAppDispatch } from "../../store";
 import { clearFilterState, } from '../filter/slice';
-import { Box, Tooltip } from "@material-ui/core";
+import { Box } from "@material-ui/core";
 import './index.scss';
 import { routes } from '../../routes';
+import { useSnackbar } from "notistack";
+import { useSelector } from "react-redux";
 
 function DifficultySelect() {
     const history = useHistory();
     const dispatch = useAppDispatch();
+    const error = useSelector((state: RootState) => state.game.videoGames.error);
+    const { enqueueSnackbar } = useSnackbar();
 
     const goToHardcore = useCallback(() => {
         dispatch(clearFilterState());
@@ -19,6 +23,11 @@ function DifficultySelect() {
             history.push(routes.game.path);
         })
     }, [dispatch, history]);
+
+    // TODO: refactor to deal with multiple errors
+    useEffect(() => {
+        if (error) enqueueSnackbar(error, { variant: 'error' })
+    }, [enqueueSnackbar, error])
 
     /*const goToMedium = useCallback(() => {
         dispatch(setDifficulty(Difficulty.Medium));
@@ -53,14 +62,14 @@ function DifficultySelect() {
                 Medium
             </Button>*/}
             {/*<Tooltip title="Guess from all existing games">*/}
-                <Button
-                    variant="contained"
-                    size="large"
-                    color="secondary"
-                    onClick={goToHardcore}
-                >
-                    Start
-                </Button>
+            <Button
+                variant="contained"
+                size="large"
+                color="secondary"
+                onClick={goToHardcore}
+            >
+                Start
+            </Button>
             {/*</Tooltip>*/}
         </Box>
     )

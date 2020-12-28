@@ -139,6 +139,7 @@ export const gameSlice = createSlice({
             })
             .addCase(fetchVideoGames.rejected, (state) => {
                 state.videoGames.status = FetchStatus.Finished;
+                state.videoGames.error = 'Unable to load games';
             });
     }
 });
