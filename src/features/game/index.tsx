@@ -14,10 +14,11 @@ import Answer from "./answer";
 import { useSnackbar, VariantType } from 'notistack';
 import LoaderContainer from "../ui/loaderContainer";
 import StretchContainer from "../ui/stretchContainer";
+import { routes } from '../../routes';
 
 const { maxPageSize, maxGamesToAnswer } = config;
 
-function Game() {
+export default function Game() {
     const dispatch = useDispatch();
     const history = useHistory();
     const { enqueueSnackbar } = useSnackbar();
@@ -60,7 +61,7 @@ function Game() {
         }
 
         if (needToRestart) {
-            history.push('/finish');
+            history.push(routes.finish.path);
         } else {
             setImageLoaded(false);
             dispatch(fetchVideoGames());
@@ -97,5 +98,3 @@ function Game() {
         </StretchContainer>
     )
 }
-
-export default Game;

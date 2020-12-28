@@ -11,6 +11,7 @@ import {
 } from "../game/slice";
 import StretchContainer from '../ui/stretchContainer';
 import LoaderContainer from "../ui/loaderContainer";
+import { routes } from '../../routes';
 
 const { maxGamesToAnswer } = config;
 
@@ -42,7 +43,7 @@ export default function Finish() {
         dispatch(clearFilterState());
         dispatch(setDifficulty(Difficulty.Hardcore));
         dispatch(fetchVideoGames()).then(() => {
-            history.push('/game');
+            history.push(routes.game.path);
         });
     }, [dispatch, history]);
 

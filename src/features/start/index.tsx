@@ -5,7 +5,7 @@ import StretchContainer from "../ui/stretchContainer";
 import { isVideoGamesLoading } from '../game/slice';
 import LoaderContainer from '../ui/loaderContainer';
 
-function StartScreen() {
+function Start() {
     const loading = useSelector(isVideoGamesLoading);
 
     return (
@@ -21,4 +21,4 @@ function StartScreen() {
     )
 }
 
-export default StartScreen;
+export default Start;

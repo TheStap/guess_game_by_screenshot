@@ -6,6 +6,7 @@ import { useAppDispatch } from "../../store";
 import { clearFilterState, } from '../filter/slice';
 import { Box, Tooltip } from "@material-ui/core";
 import './index.scss';
+import { routes } from '../../routes';
 
 function DifficultySelect() {
     const history = useHistory();
@@ -15,7 +16,7 @@ function DifficultySelect() {
         dispatch(clearFilterState());
         dispatch(setDifficulty(Difficulty.Hardcore));
         dispatch(fetchVideoGames()).then(() => {
-            history.push('/game');
+            history.push(routes.game.path);
         })
     }, [dispatch, history]);
 
