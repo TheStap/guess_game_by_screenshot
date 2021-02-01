@@ -3,7 +3,8 @@ import { GameModel } from '../../interfaces/Games';
 import { useDispatch, useSelector } from "react-redux";
 import Box from '@material-ui/core/Box';
 import './index.scss';
-import { getFilterState,
+import {
+    getFilterState,
     setFilterState,
     setFilterStateToMakeGameMoreDifficult
 } from "../filter/slice";
@@ -48,37 +49,48 @@ export default function Game() {
         if (!needToFinish) enqueueSnackbar(message, { variant })
     }, [enqueueSnackbar, needToFinish])
 
-    const vote = useCallback((answer: GameModel) => {
-        if (!answersCount) dispatch(setFilterState({ ...filter, pageSize: maxPageSize }));
+    const rightAnswerActions = useCallback(() => {
+        showMessage('You are right!', 'success');
+        dispatch(incrementCorrectAnswersCount());
+        dispatch(setFilterStateToMakeGameMoreDifficult(
+            { videogamesCount: game.videoGames.count, correctAnswersCount: correct }
+        ));
+    }, [correct, dispatch, game.videoGames.count, showMessage]);
 
-        if (answer.id === game.videoGameToAnswerId) {
-            showMessage('You are right!', 'success');
-            dispatch(incrementCorrectAnswersCount());
-            dispatch(setFilterStateToMakeGameMoreDifficult(
-                { videogamesCount: game.videoGames.count, correctAnswersCount: correct }
-            ));
-        } else {
-            showMessage('Nope', 'error');
-            dispatch(incrementWrongAnswersCount());
-            dispatch(setFilterState({ ...filter, page: filter.page + 1 }));
-        }
+    const wrongAnswerActions = useCallback(() => {
+        showMessage('Nope', 'error');
+        dispatch(incrementWrongAnswersCount());
+        dispatch(setFilterState({ ...filter, page: filter.page + 1 }));
+    }, [dispatch, filter, showMessage])
 
+    const moveToNextGameStep = useCallback(() => {
         if (needToFinish) {
-            history.push(routes.finish.path);
+            history.push(routes.finish.path)
         } else {
             setImageLoaded(false);
             dispatch(fetchVideoGames());
         }
+    }, [dispatch, history, needToFinish])
+
+    const increaseVideoGamesSelection = useCallback(() => {
+        dispatch(setFilterState({ ...filter, pageSize: maxPageSize }));
+    }, [dispatch, filter])
+
+    const vote = useCallback((answer: GameModel) => {
+        if (!answersCount) increaseVideoGamesSelection();
+
+        const answerIsCorrect = answer.id === game.videoGameToAnswerId;
+
+        answerIsCorrect ? rightAnswerActions() : wrongAnswerActions();
+
+        moveToNextGameStep();
     }, [
         answersCount,
-        correct,
-        dispatch,
-        filter,
+        increaseVideoGamesSelection,
         game.videoGameToAnswerId,
-        game.videoGames.count,
-        needToFinish,
-        history,
-        showMessage
+        rightAnswerActions,
+        wrongAnswerActions,
+        moveToNextGameStep
     ]);
 
     return (
