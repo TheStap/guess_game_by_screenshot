@@ -20,7 +20,7 @@
     "eslint-config-airbnb": "^18.2.1",
     "fontsource-roboto": "^3.0.3",
     "formik": "^2.2.5",
-    "node-sass": "^4.14.1",
+    "sass": "^1.79.4",
     "notistack": "^1.0.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -30,7 +30,7 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
-    "start": "cross-env BROWSER=none react-scripts start",
+    "start": "cross-env BROWSER=none react-scripts --openssl-legacy-provider start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -59,6 +59,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {}
+  }
 }

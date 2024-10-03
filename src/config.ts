@@ -8,7 +8,7 @@ interface Config {
 }
 
 const config: Config = {
-    apiKey: '',
+    apiKey: process.env.API_KEY || '',
     baseURL: 'https://api.rawg.io/api/',
     earliestReleaseYearInBase: 1971,
     maxPageSize: 40,
